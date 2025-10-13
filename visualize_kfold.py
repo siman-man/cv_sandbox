@@ -8,7 +8,7 @@ iris = load_iris()
 X, y = iris.data, iris.target
 
 # KFoldの設定（5分割）
-kfold = KFold(n_splits=5, shuffle=True, random_state=42)
+kfold = KFold(n_splits=5, shuffle=False)
 
 # ビジュアライゼーション用の準備
 n_samples = len(X)
