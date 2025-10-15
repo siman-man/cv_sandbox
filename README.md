@@ -26,6 +26,10 @@ GroupKFold は shuffle の指定あり、なしで挙動が変化する
 
 shuffle の True との違いは、True の場合は「グループの数」が等しくなるように分割され、False の場合は「サンプルの個数」が等しくなるように分割される。
 
+## StratifiedKFold
+
+各クラスをラウンドロビン方式でフォールド毎に割り振って、それを各クラスごとで結合する。
+
 ### 同一サイズの確認処理
 
 check_consistent_length

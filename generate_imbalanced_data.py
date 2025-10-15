@@ -5,14 +5,35 @@ Irisデータセット形式（特徴量4次元）で、クラスごとのサン
 """
 
 import numpy as np
-from typing import Tuple
+from typing import Tuple, overload
 
+
+@overload
+def generate_imbalanced_iris_like_data(
+    class_samples: list[int] = None,
+    n_features: int = 4,
+    random_state: int = None,
+    with_groups: bool = False,
+    samples_per_group: int = 5
+) -> Tuple[np.ndarray, np.ndarray]: ...
+
+@overload
+def generate_imbalanced_iris_like_data(
+    class_samples: list[int] = None,
+    n_features: int = 4,
+    random_state: int = None,
+    *,
+    with_groups: bool = True,
+    samples_per_group: int = 5
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]: ...
 
 def generate_imbalanced_iris_like_data(
     class_samples: list[int] = None,
     n_features: int = 4,
-    random_state: int = None
-) -> Tuple[np.ndarray, np.ndarray]:
+    random_state: int = None,
+    with_groups: bool = False,
+    samples_per_group: int = 5
+) -> Tuple[np.ndarray, np.ndarray] | Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Iris風の不均衡データセットを生成します。
 
@@ -28,6 +49,13 @@ def generate_imbalanced_iris_like_data(
     random_state : int, default=None
         乱数シード。
 
+    with_groups : bool, default=False
+        Trueの場合、グループ情報も返します。
+
+    samples_per_group : int, default=5
+        各グループに含まれるサンプル数の目安。
+        実際のグループサイズは、クラス内でサンプルを均等に分割するため多少異なる場合があります。
+
     Returns
     -------
     X : ndarray of shape (n_samples, n_features)
@@ -36,6 +64,10 @@ def generate_imbalanced_iris_like_data(
     y : ndarray of shape (n_samples,)
         クラスラベル。
 
+    groups : ndarray of shape (n_samples,), optional
+        グループラベル（with_groups=Trueの場合のみ返される）。
+        各クラス内で複数のグループに分割されます。
+
     Examples
     --------
     >>> X, y = generate_imbalanced_iris_like_data([60, 35, 23], random_state=42)
@@ -43,6 +75,10 @@ def generate_imbalanced_iris_like_data(
     (118, 4)
     >>> np.bincount(y)
     array([60, 35, 23])
+
+    >>> X, y, groups = generate_imbalanced_iris_like_data([60, 35, 23], random_state=42, with_groups=True)
+    >>> len(np.unique(groups))
+    24
     """
     if class_samples is None:
         class_samples = [60, 35, 23]
@@ -54,6 +90,8 @@ def generate_imbalanced_iris_like_data(
     # 各クラスの特徴量を生成（クラスごとに異なる分布）
     X_list = []
     y_list = []
+    groups_list = []
+    group_id = 0
 
     for class_idx, n_samples_in_class in enumerate(class_samples):
         # クラスごとに中心をずらして正規分布から生成
@@ -64,6 +102,17 @@ def generate_imbalanced_iris_like_data(
         X_list.append(X_class)
         y_list.append(y_class)
 
+        if with_groups:
+            # クラス内でグループを作成
+            n_groups_in_class = max(1, n_samples_in_class // samples_per_group)
+            # 各サンプルをグループに割り当て
+            class_groups = np.array_split(np.arange(n_samples_in_class), n_groups_in_class)
+            groups_class = np.zeros(n_samples_in_class, dtype=int)
+            for i, group_indices in enumerate(class_groups):
+                groups_class[group_indices] = group_id
+                group_id += 1
+            groups_list.append(groups_class)
+
     X = np.vstack(X_list)
     y = np.hstack(y_list)
 
@@ -72,10 +121,14 @@ def generate_imbalanced_iris_like_data(
     # X = X[shuffle_idx]
     # y = y[shuffle_idx]
 
-    return X, y
+    if with_groups:
+        groups = np.hstack(groups_list)
+        return X, y, groups
+    else:
+        return X, y
 
 
-def print_dataset_info(X: np.ndarray, y: np.ndarray, name: str = "Dataset"):
+def print_dataset_info(X: np.ndarray, y: np.ndarray, name: str = "Dataset", groups: np.ndarray | None = None):
     """
     データセットの情報を表示します。
 
@@ -89,6 +142,9 @@ def print_dataset_info(X: np.ndarray, y: np.ndarray, name: str = "Dataset"):
 
     name : str, default="Dataset"
         データセット名。
+
+    groups : ndarray of shape (n_samples,), optional
+        グループラベル。
     """
     print(f"\n{name} 情報:")
     print(f"  サンプル数: {len(X)}")
@@ -96,6 +152,16 @@ def print_dataset_info(X: np.ndarray, y: np.ndarray, name: str = "Dataset"):
     print(f"  クラス数: {len(np.unique(y))}")
     print(f"  各クラスのサンプル数: {np.bincount(y)}")
     print(f"  クラス比率: {[f'{c:.1%}' for c in np.bincount(y) / len(y)]}")
+
+    if groups is not None:
+        print(f"  グループ数: {len(np.unique(groups))}")
+        print(f"  各グループのサンプル数:")
+        for group_id in np.unique(groups):
+            group_mask = groups == group_id
+            group_size = np.sum(group_mask)
+            group_classes = y[group_mask]
+            class_dist = np.bincount(group_classes, minlength=len(np.unique(y)))
+            print(f"    グループ {group_id}: {group_size}サンプル (クラス分布: {class_dist})")
 
 
 if __name__ == "__main__":
@@ -119,5 +185,14 @@ if __name__ == "__main__":
     # パターン4: 4クラス
     X4, y4 = generate_imbalanced_iris_like_data([40, 30, 25, 15], random_state=42)
     print_dataset_info(X4, y4, "パターン4: 4クラス")
+
+    # パターン5: グループ付き
+    print("\n" + "=" * 80)
+    print("グループ付きデータセット生成のテスト")
+    print("=" * 80)
+    X5, y5, groups5 = generate_imbalanced_iris_like_data(
+        [60, 35, 23], random_state=42, with_groups=True, samples_per_group=5
+    )
+    print_dataset_info(X5, y5, "パターン5: グループ付き", groups=groups5)
 
     print()
