@@ -30,6 +30,47 @@ shuffle の True との違いは、True の場合は「グループの数」が�
 
 各クラスをラウンドロビン方式でフォールド毎に割り振って、それを各クラスごとで結合する。
 
+## StratifiedGroupKFold
+
+各クラスの比率を保ったままグループの制約も追加したもの。
+
+比率というがクラスごとにフォールド間のサンプルの標準偏差を小さくする処理を行っているだけではある。
+
+### _find_best_fold
+
+以下の基準で最良のfoldを選択：
+  - 第1優先: fold_evalが最小（クラス比率が最も均等になる）
+  - 第2優先: 評価が同じ場合、サンプル数が少ないfoldを選ぶ（fold間のサンプル数バランスも考慮）
+
+```python
+    def _find_best_fold(self, y_counts_per_fold, y_cnt, group_y_counts):
+        best_fold = None
+        min_eval = np.inf
+        min_samples_in_fold = np.inf
+        for i in range(self.n_splits):
+            y_counts_per_fold[i] += group_y_counts
+            # 提案された各foldでのクラス間の分布を要約
+            std_per_class = np.std(y_counts_per_fold / y_cnt.reshape(1, -1), axis=0)
+            y_counts_per_fold[i] -= group_y_counts
+            fold_eval = np.mean(std_per_class)
+            samples_in_fold = np.sum(y_counts_per_fold[i])
+            is_current_fold_better = fold_eval < min_eval or (
+                np.isclose(fold_eval, min_eval)
+                and samples_in_fold < min_samples_in_fold
+            )
+            if is_current_fold_better:
+                min_eval = fold_eval
+                min_samples_in_fold = samples_in_fold
+                best_fold = i
+        return best_fold
+```
+
+
+## TimeSeriesSplit
+
+説明するか不明
+
+
 ### 同一サイズの確認処理
 
 check_consistent_length

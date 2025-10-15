@@ -1,7 +1,13 @@
 import pdb
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
-from generate_imbalanced_data import (
+import sys
+from pathlib import Path
+
+# プロジェクトルートをパスに追加
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from utils.generate_imbalanced_data import (
     generate_imbalanced_iris_like_data,
     print_dataset_info,
 )

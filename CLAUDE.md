@@ -20,26 +20,49 @@ uv run python <script_name>.py
 
 ## プロジェクト構成
 
-### コアスクリプト
+プロジェクトは交差検証の手法ごとにディレクトリを分けて構成されています。
 
-- **iris_kfold.py** - IrisデータセットでKFoldを使った基本的な交差検証の例
-- **groupkfold_iris.py** - GroupKFoldの`shuffle=True/False`の動作の違いを比較・可視化
-- **multilabel_kfold_example.py** - マルチラベル分類における層化交差検証のデモ
-- **trace_make_test_folds.py** - StratifiedKFoldの内部処理(`_make_test_folds`)をステップバイステップでトレース・デバッグするスクリプト
+### ディレクトリ構造
 
-### データ生成ユーティリティ
+```
+cv_sandbox/
+├── kfold/                          # KFold関連
+│   ├── iris_kfold.py              # IrisデータセットでKFoldを使った基本的な例
+│   ├── visualize_kfold.py         # KFoldの分割パターンを可視化
+│   └── train_with_kfold.py        # KFoldを使った学習の例
+│
+├── stratified_kfold/              # StratifiedKFold関連
+│   └── trace_make_test_folds.py   # _make_test_foldsの内部処理をトレース
+│
+├── group_kfold/                   # GroupKFold関連
+│   └── groupkfold_iris.py         # shuffle=True/Falseの違いを比較・可視化
+│
+├── stratified_group_kfold/        # StratifiedGroupKFold関連
+│   └── stratified_groupkfold_example.py  # 詳細な分析と可視化
+│
+├── multilabel_kfold/              # MultilabelStratifiedKFold関連
+│   └── multilabel_kfold_example.py       # マルチラベル分類の層化交差検証
+│
+└── utils/                         # ユーティリティ
+    ├── generate_imbalanced_data.py    # 不均衡データ生成
+    ├── generate_multilabel_data.py    # マルチラベルデータ生成
+    └── translate_docstrings.py        # docstring翻訳ツール
+```
 
-- **generate_multilabel_data.py** - マルチラベル分類用のサンプルデータを生成
-- **generate_imbalanced_data.py** - 不均衡データ（クラス間でサンプル数が異なる）を生成
+### 実行方法
 
-### 可視化
+各スクリプトはプロジェクトルートから実行します：
 
-- **visualize_kfold.py** - KFoldの分割パターンをヒートマップで可視化
+```bash
+# KFoldの例
+uv run python kfold/iris_kfold.py
 
-### その他
+# StratifiedGroupKFoldの例（可視化付き）
+uv run python stratified_group_kfold/stratified_groupkfold_example.py
 
-- **translate_docstrings.py** - docstringを翻訳するためのユーティリティ
-- **main.py** - 基本的なエントリーポイント（現在はほぼ空）
+# マルチラベル分類の例
+uv run python multilabel_kfold/multilabel_kfold_example.py
+```
 
 ## アーキテクチャと実装の理解
 

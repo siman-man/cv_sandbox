@@ -3,7 +3,13 @@ iterative-stratificationを使ったマルチラベル分類のK-Fold交差検�
 """
 import numpy as np
 from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
-from generate_multilabel_data import generate_multilabel_data, print_label_statistics
+import sys
+from pathlib import Path
+
+# プロジェクトルートをパスに追加
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from utils.generate_multilabel_data import generate_multilabel_data, print_label_statistics
 
 
 def analyze_fold_distribution(y: np.ndarray, train_idx: np.ndarray, test_idx: np.ndarray, fold_num: int) -> None:

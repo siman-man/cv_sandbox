@@ -8,7 +8,13 @@ StratifiedGroupKFoldは以下の制約を満たすようにデータを分割し
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedGroupKFold
-from generate_imbalanced_data import generate_imbalanced_iris_like_data, print_dataset_info
+import sys
+from pathlib import Path
+
+# プロジェクトルートをパスに追加
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from utils.generate_imbalanced_data import generate_imbalanced_iris_like_data, print_dataset_info
 
 
 def analyze_fold_distribution(
